@@ -10,6 +10,9 @@ const path = require('path');
 // Public node modules.
 const _ = require('lodash');
 
+// Other utilities
+const pluginUtils = require('./plugins');
+
 // Following this discussion https://stackoverflow.com/questions/18082/validate-decimal-numbers-in-javascript-isnumeric this function is the best implem to determine if a value is a valid number candidate
 const isNumeric = (value) => {
   return !_.isObject(value) && !isNaN(parseFloat(value)) && isFinite(value);
@@ -136,7 +139,7 @@ module.exports = {
         const relatedAttribute = models[association.collection].attributes[association.via];
 
         if (!relatedAttribute) {
-          throw new Error(`The attribute \`${association.via}\` is missing in the model ${_.upperFirst(association.collection)} ${association.plugin ? '(plugin - ' + association.plugin + ')' : '' }`);
+          throw new Error(`The attribute \`${association.via}\` is missing in the model ${_.upperFirst(association.collection)} ${association.plugin ? '(plugin - ' + association.plugin + ')' : ''}`);
         }
 
         types.current = 'collection';
@@ -218,7 +221,7 @@ module.exports = {
           nature: 'manyToOneMorph',
           verbose: 'morphMany'
         };
-      }  else if (types.current === 'modelD' && types.other === 'morphTo') {
+      } else if (types.current === 'modelD' && types.other === 'morphTo') {
         return {
           nature: 'oneToManyMorph',
           verbose: 'morphOne'
@@ -334,7 +337,7 @@ module.exports = {
 
       if (globalName !== '*') {
         details = association.plugin ?
-          _.get(strapi.plugins, `${association.plugin}.models.${globalName}.attributes.${association.via}`, {}):
+          _.get(strapi.plugins, `${association.plugin}.models.${globalName}.attributes.${association.via}`, {}) :
           _.get(strapi.models, `${globalName}.attributes.${association.via}`, {});
       }
 
@@ -415,7 +418,7 @@ module.exports = {
   },
 
   getVia: (attribute, association) => {
-    return _.findKey(strapi.models[association.model || association.collection].attributes, {via: attribute});
+    return _.findKey(strapi.models[association.model || association.collection].attributes, { via: attribute });
   },
 
   convertParams: (entity, params) => {
@@ -454,7 +457,7 @@ module.exports = {
       limit: 100
     };
 
-    _.forEach(params, (value, key)  => {
+    _.forEach(params, (value, key) => {
       let result;
       let formattedValue;
       let modelAttributes = models[model]['attributes'];
@@ -464,7 +467,7 @@ module.exports = {
         fieldType = modelAttributes[key]['type'];
       } else {
         // Remove the filter keyword at the end
-        let splitKey = key.split('_').slice(0,-1);
+        let splitKey = key.split('_').slice(0, -1);
         splitKey = splitKey.join('_');
 
         if (modelAttributes[splitKey]) {
@@ -509,5 +512,41 @@ module.exports = {
     });
 
     return convertParams;
-  }
+  },
+  forEachModel: forEachModel,
+  isAttributePrivate: isAttributePrivate
 };
+
+
+/**
+ * Utility to do somethingn for every model
+ * This will return an array of all of the results of cb, one fore each model
+ *
+ * @param {*} cb
+ */
+function forEachModel(cb) {
+  // build a function that will produce an array of promises for the models in the current object
+  // the current object should be either strapi.models or strapi.plugins[pluginName] objecct
+  let forModelsInObj = (obj, pluginName) =>
+    Object.keys(obj).map(modelName =>
+      cb(obj[modelName], modelName, pluginName)
+    );
+
+  let results = [...forModelsInObj(strapi.models)];
+
+  pluginUtils.forEachPlugin((plugin, pluginName) =>
+    results.push(...forModelsInObj(plugin.models, pluginName))
+  );
+
+  return results;
+}
+
+
+/**
+ * Utility to check if the attribute is private or not
+ * @param {*} model
+ * @param {*} attribute
+ */
+function isAttributePrivate(model, attribute) {
+  return model.attributes[attribute] && model.attributes[attribute].private;
+}
