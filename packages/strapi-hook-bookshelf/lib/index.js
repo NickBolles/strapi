@@ -26,7 +26,7 @@ const GLOBALS = {};
  * Bookshelf hook
  */
 
-module.exports = function(strapi) {
+module.exports = function (strapi) {
   const hook = _.merge({
     /**
      * Default options
@@ -102,7 +102,7 @@ module.exports = function(strapi) {
             }, definition.options);
 
             if (_.isString(_.get(connection, 'options.pivot_prefix'))) {
-              loadedModel.toJSON = function(options = {}) {
+              loadedModel.toJSON = function (options = {}) {
                 const { shallow = false, omitPivot = false } = options;
                 const attributes = this.serialize(options);
 
@@ -155,8 +155,12 @@ module.exports = function(strapi) {
                 };
 
                 // Update serialize to reformat data for polymorphic associations.
-                loadedModel.serialize = function(options) {
+                loadedModel.serialize = function (options) {
                   const attrs = _.clone(this.attributes);
+                  if (!options.strapiSkipModel) {
+                    attrs.___strapi_model = definition.globalName;
+                  }
+
 
                   if (options && options.shallow) {
                     return attrs;
@@ -181,7 +185,7 @@ module.exports = function(strapi) {
 
                       // Retrieve opposite model.
                       const model = association.plugin ?
-                        strapi.plugins[association.plugin].models[association.collection || association.model]:
+                        strapi.plugins[association.plugin].models[association.collection || association.model] :
                         strapi.models[association.collection || association.model];
 
                       // Reformat data by bypassing the many-to-many relationship.
@@ -217,7 +221,7 @@ module.exports = function(strapi) {
                 };
 
                 // Initialize lifecycle callbacks.
-                loadedModel.initialize = function() {
+                loadedModel.initialize = function () {
                   const lifecycle = {
                     creating: 'beforeCreate',
                     created: 'afterCreate',
@@ -261,11 +265,11 @@ module.exports = function(strapi) {
                             // oneToMorph or manyToMorph side.
                             // Retrieve collection name because we are using it to build our hidden model.
                             const model = association.plugin ?
-                              strapi.plugins[association.plugin].models[association.collection || association.model]:
+                              strapi.plugins[association.plugin].models[association.collection || association.model] :
                               strapi.models[association.collection || association.model];
 
                             return {
-                              [`${association.alias}.${model.collectionName}`]: function(query) {
+                              [`${association.alias}.${model.collectionName}`]: function (query) {
                                 query.orderBy('created_at', 'desc');
                               }
                             };
@@ -320,7 +324,7 @@ module.exports = function(strapi) {
                     events.forEach((event) => {
                       let fn;
 
-                      if (event.name.indexOf('collection') !== -1 ) {
+                      if (event.name.indexOf('collection') !== -1) {
                         fn = (instance) => instance.models.map((entry) => {
                           jsonFormatter(entry.attributes);
                         });
@@ -508,10 +512,10 @@ module.exports = function(strapi) {
                     };
 
                     const storeTable = async (table, attributes) => {
-                      const existTable = await StrapiConfigs.forge({key: `db_model_${table}`}).fetch();
+                      const existTable = await StrapiConfigs.forge({ key: `db_model_${table}` }).fetch();
 
                       if (existTable) {
-                        await StrapiConfigs.forge({id: existTable.id}).save({
+                        await StrapiConfigs.forge({ id: existTable.id }).save({
                           value: JSON.stringify(attributes)
                         });
                       } else {
@@ -529,7 +533,7 @@ module.exports = function(strapi) {
                       if (definition.primaryKeyType === 'uuid' && definition.client === 'pg') {
                         idAttributeBuilder = ['id uuid NOT NULL DEFAULT uuid_generate_v4() NOT NULL PRIMARY KEY'];
                       } else if (definition.primaryKeyType !== 'integer') {
-                        idAttributeBuilder = [`id ${getType({type: definition.primaryKeyType})} NOT NULL PRIMARY KEY`];
+                        idAttributeBuilder = [`id ${getType({ type: definition.primaryKeyType })} NOT NULL PRIMARY KEY`];
                       }
                       const columns = generateColumns(attributes, idAttributeBuilder).join(',\n\r');
 
@@ -580,16 +584,16 @@ module.exports = function(strapi) {
 
                       let previousAttributes;
                       try {
-                        previousAttributes = JSON.parse((await StrapiConfigs.forge({key: `db_model_${table}`}).fetch()).toJSON().value);
+                        previousAttributes = JSON.parse((await StrapiConfigs.forge({ key: `db_model_${table}` }).fetch()).toJSON().value);
                       } catch (err) {
                         await storeTable(table, attributes);
-                        previousAttributes = JSON.parse((await StrapiConfigs.forge({key: `db_model_${table}`}).fetch()).toJSON().value);
+                        previousAttributes = JSON.parse((await StrapiConfigs.forge({ key: `db_model_${table}` }).fetch()).toJSON().value);
                       }
 
                       // Execute query to update column type
                       await Promise.all(columns.map(attribute =>
                         new Promise(async (resolve) => {
-                          if (JSON.stringify(previousAttributes[attribute]) ===  JSON.stringify(attributes[attribute])) {
+                          if (JSON.stringify(previousAttributes[attribute]) === JSON.stringify(attributes[attribute])) {
                             return resolve();
                           }
 
@@ -665,7 +669,7 @@ module.exports = function(strapi) {
 
                   if (manyRelations && manyRelations.dominant) {
                     const collection = manyRelations.plugin ?
-                      strapi.plugins[manyRelations.plugin].models[manyRelations.collection]:
+                      strapi.plugins[manyRelations.plugin].models[manyRelations.collection] :
                       strapi.models[manyRelations.collection];
 
                     const attributes = {
@@ -682,7 +686,7 @@ module.exports = function(strapi) {
                         _.sortBy(
                           [
                             collection.attributes[
-                              manyRelations.via
+                            manyRelations.via
                             ],
                             manyRelations
                           ],
@@ -740,7 +744,7 @@ module.exports = function(strapi) {
               // Exclude polymorphic association.
               if (globalName !== '*') {
                 globalId = details.plugin ?
-                  _.get(strapi.plugins,`${details.plugin}.models.${globalName.toLowerCase()}.globalId`):
+                  _.get(strapi.plugins, `${details.plugin}.models.${globalName.toLowerCase()}.globalId`) :
                   _.get(strapi.models, `${globalName.toLowerCase()}.globalId`);
               }
 
@@ -759,7 +763,7 @@ module.exports = function(strapi) {
                           return details;
                         }
                       }
-                    ):
+                    ) :
                     _.findKey(
                       strapi.models[details.model].attributes,
                       details => {
@@ -775,10 +779,10 @@ module.exports = function(strapi) {
                     );
 
                   const columnName = details.plugin ?
-                    _.get(strapi.plugins, `${details.plugin}.models.${details.model}.attributes.${FK}.columnName`, FK):
+                    _.get(strapi.plugins, `${details.plugin}.models.${details.model}.attributes.${FK}.columnName`, FK) :
                     _.get(strapi.models, `${details.model}.attributes.${FK}.columnName`, FK);
 
-                  loadedModel[name] = function() {
+                  loadedModel[name] = function () {
                     return this.hasOne(
                       GLOBALS[globalId],
                       columnName
@@ -788,19 +792,19 @@ module.exports = function(strapi) {
                 }
                 case 'hasMany': {
                   const columnName = details.plugin ?
-                    _.get(strapi.plugins, `${details.plugin}.models.${globalId.toLowerCase()}.attributes.${details.via}.columnName`, details.via):
+                    _.get(strapi.plugins, `${details.plugin}.models.${globalId.toLowerCase()}.attributes.${details.via}.columnName`, details.via) :
                     _.get(strapi.models[globalId.toLowerCase()].attributes, `${details.via}.columnName`, details.via);
 
                   // Set this info to be able to see if this field is a real database's field.
                   details.isVirtual = true;
 
-                  loadedModel[name] = function() {
+                  loadedModel[name] = function () {
                     return this.hasMany(GLOBALS[globalId], columnName);
                   };
                   break;
                 }
                 case 'belongsTo': {
-                  loadedModel[name] = function() {
+                  loadedModel[name] = function () {
                     return this.belongsTo(
                       GLOBALS[globalId],
                       _.get(details, 'columnName', name)
@@ -810,7 +814,7 @@ module.exports = function(strapi) {
                 }
                 case 'belongsToMany': {
                   const collection = details.plugin ?
-                    strapi.plugins[details.plugin].models[details.collection]:
+                    strapi.plugins[details.plugin].models[details.collection] :
                     strapi.models[details.collection];
 
                   const collectionName = _.get(details, 'collectionName') ||
@@ -818,7 +822,7 @@ module.exports = function(strapi) {
                       _.sortBy(
                         [
                           collection.attributes[
-                            details.via
+                          details.via
                           ],
                           details
                         ],
@@ -858,7 +862,7 @@ module.exports = function(strapi) {
                   // Set this info to be able to see if this field is a real database's field.
                   details.isVirtual = true;
 
-                  loadedModel[name] = function() {
+                  loadedModel[name] = function () {
                     if (
                       _.isArray(_.get(details, 'withPivot')) &&
                       !_.isEmpty(details.withPivot)
@@ -882,12 +886,12 @@ module.exports = function(strapi) {
                 }
                 case 'morphOne': {
                   const model = details.plugin ?
-                    strapi.plugins[details.plugin].models[details.model]:
+                    strapi.plugins[details.plugin].models[details.model] :
                     strapi.models[details.model];
 
                   const globalId = `${model.collectionName}_morph`;
 
-                  loadedModel[name] =  function() {
+                  loadedModel[name] = function () {
                     return this
                       .morphOne(GLOBALS[globalId], details.via, `${definition.collectionName}`)
                       .query(qb => {
@@ -898,12 +902,12 @@ module.exports = function(strapi) {
                 }
                 case 'morphMany': {
                   const collection = details.plugin ?
-                    strapi.plugins[details.plugin].models[details.collection]:
+                    strapi.plugins[details.plugin].models[details.collection] :
                     strapi.models[details.collection];
 
                   const globalId = `${collection.collectionName}_morph`;
 
-                  loadedModel[name] =  function() {
+                  loadedModel[name] = function () {
                     return this
                       .morphMany(GLOBALS[globalId], details.via, `${definition.collectionName}`)
                       .query(qb => {
@@ -1003,7 +1007,7 @@ module.exports = function(strapi) {
       cb();
     },
 
-    getQueryParams: (value, type, key) =>{
+    getQueryParams: (value, type, key) => {
       const result = {};
 
       switch (type) {

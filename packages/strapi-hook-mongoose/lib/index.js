@@ -12,7 +12,7 @@ const Mongoose = mongoose.Mongoose;
 const mongooseUtils = require('mongoose/lib/utils');
 
 // Strapi helpers for models.
-const { models: utilsModels }  = require('strapi-utils');
+const { models: utilsModels } = require('strapi-utils');
 
 
 // Local helpers.
@@ -49,7 +49,7 @@ module.exports = function (strapi) {
      */
 
     initialize: cb =>
-      _.forEach(_.pickBy(strapi.config.connections, {connector: 'strapi-hook-mongoose'}), async (connection, connectionName) => {
+      _.forEach(_.pickBy(strapi.config.connections, { connector: 'strapi-hook-mongoose' }), async (connection, connectionName) => {
         const instance = new Mongoose();
         const { uri, host, port, username, password, database, srv } = _.defaults(connection.settings, strapi.config.hook.settings.mongoose);
         const uriOptions = uri ? url.parse(uri, true).query : {};
@@ -81,8 +81,8 @@ module.exports = function (strapi) {
         try {
           /* FIXME: for now, mongoose doesn't support srv auth except the way including user/pass in URI.
           * https://github.com/Automattic/mongoose/issues/6881 */
-          await instance.connect(uri || `mongodb${isSrv ? '+srv' : ''}://${username}:${password}@${host}${ !isSrv ? ':' + port : '' }/`, connectOptions);
-        } catch ({message}) {
+          await instance.connect(uri || `mongodb${isSrv ? '+srv' : ''}://${username}:${password}@${host}${!isSrv ? ':' + port : ''}/`, connectOptions);
+        } catch ({ message }) {
           const errMsg = message.includes(`:${port}`) ? 'Make sure your MongoDB database is running...' : message;
 
           return cb(errMsg);
@@ -129,7 +129,7 @@ module.exports = function (strapi) {
                     Object.keys(preLifecycle)
                       .filter(key => key.indexOf('find') !== -1)
                       .forEach(key => {
-                        collection.schema.pre(key,  function (next) {
+                        collection.schema.pre(key, function (next) {
                           if (this._mongooseOptions.populate && this._mongooseOptions.populate[association.alias]) {
                             if (association.nature === 'oneToManyMorph' || association.nature === 'manyToManyMorph') {
                               this._mongooseOptions.populate[association.alias].match = {
@@ -174,7 +174,7 @@ module.exports = function (strapi) {
                 _.forEach(postLifecycle, (fn, key) => {
                   if (_.isFunction(target[model.toLowerCase()][fn])) {
                     collection.schema.post(key, function (doc, next) {
-                      target[model.toLowerCase()][fn](this, doc).then(next).catch(err =>  {
+                      target[model.toLowerCase()][fn](this, doc).then(next).catch(err => {
                         strapi.log.error(err);
                         next(err);
                       });
@@ -200,6 +200,9 @@ module.exports = function (strapi) {
                 collection.schema.options.toObject = collection.schema.options.toJSON = {
                   virtuals: true,
                   transform: function (doc, returned, opts) {
+                    if (!opts.strapiSkipModel) {
+                      returned.___strapi_model = definition.globalName;
+                    }
                     // Remover $numberDecimal nested property.
                     Object.keys(returned)
                       .filter(key => returned[key] instanceof mongoose.Types.Decimal128)
@@ -322,7 +325,7 @@ module.exports = function (strapi) {
                   break;
                 }
                 case 'hasMany': {
-                  const FK = _.find(definition.associations, {alias: name});
+                  const FK = _.find(definition.associations, { alias: name });
                   const ref = details.plugin ? strapi.plugins[details.plugin].models[details.collection].globalId : strapi.models[details.collection].globalId;
 
                   if (FK) {
@@ -344,7 +347,7 @@ module.exports = function (strapi) {
                   break;
                 }
                 case 'belongsTo': {
-                  const FK = _.find(definition.associations, {alias: name});
+                  const FK = _.find(definition.associations, { alias: name });
                   const ref = details.plugin ? strapi.plugins[details.plugin].models[details.model].globalId : strapi.models[details.model].globalId;
 
                   if (FK && FK.nature !== 'oneToOne' && FK.nature !== 'manyToOne' && FK.nature !== 'oneWay' && FK.nature !== 'oneToMorph') {
@@ -367,7 +370,7 @@ module.exports = function (strapi) {
                   break;
                 }
                 case 'belongsToMany': {
-                  const FK = _.find(definition.associations, {alias: name});
+                  const FK = _.find(definition.associations, { alias: name });
                   const ref = details.plugin ? strapi.plugins[details.plugin].models[details.collection].globalId : strapi.models[details.collection].globalId;
 
                   // One-side of the relationship has to be a virtual field to be bidirectional.
@@ -389,7 +392,7 @@ module.exports = function (strapi) {
                   break;
                 }
                 case 'morphOne': {
-                  const FK = _.find(definition.associations, {alias: name});
+                  const FK = _.find(definition.associations, { alias: name });
                   const ref = details.plugin ? strapi.plugins[details.plugin].models[details.model].globalId : strapi.models[details.model].globalId;
 
                   definition.loadedModel[name] = {
@@ -404,7 +407,7 @@ module.exports = function (strapi) {
                   break;
                 }
                 case 'morphMany': {
-                  const FK = _.find(definition.associations, {alias: name});
+                  const FK = _.find(definition.associations, { alias: name });
                   const ref = details.plugin ? strapi.plugins[details.plugin].models[details.collection].globalId : strapi.models[details.collection].globalId;
 
                   definition.loadedModel[name] = {
