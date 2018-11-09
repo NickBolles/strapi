@@ -109,7 +109,7 @@ module.exports = {
       params.model = 'user';
       params.id = (params._id || params.id);
 
-      await strapi.plugins['content-manager'].services['contentmanager'].delete(params, {source: 'users-permissions'});
+      await strapi.plugins['content-manager'].services['contentmanager'].delete(params, { source: 'users-permissions' });
     }
 
     return strapi.query('user', 'users-permissions').delete(params);
@@ -141,5 +141,41 @@ module.exports = {
 
   validatePassword: (password, hash) => {
     return bcrypt.compareSync(password, hash);
-  }
+  },
+  getCurrentUser: getCurrentUser,
+  getCurrentUserRole: getCurrentUserRole
 };
+
+
+async function getCurrentUserRole(strapi, ctx, user) {
+  if (!user) {
+    user = await getCurrentUser(strapi, ctx);
+  }
+  if (user) {
+    let { role } = user;
+    if (role) {
+      return role;
+    }
+  }
+
+  return await strapi
+    .query('role', 'users-permissions')
+    .findOne({ type: 'public' }, []);
+}
+
+async function getCurrentUser(strapi, ctx) {
+  if (ctx.state.user) {
+    return ctx.state.user;
+  }
+  if (ctx.request && ctx.request.header && ctx.request.header.authorization) {
+    const { _id, id } = await strapi.plugins[
+      'users-permissions'
+    ].services.jwt.getToken(ctx);
+
+    if ((id || _id) === undefined) {
+      throw new Error('Invalid token: Token did not contain required fields');
+    }
+    return await strapi.query('user', 'users-permissions').findOne({ _id, id });
+  }
+  return null;
+}
