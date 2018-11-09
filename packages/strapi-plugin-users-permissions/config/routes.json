@@ -104,7 +104,6 @@
         "policies": []
       }
     },
-
     {
       "method": "PUT",
       "path": "/providers",
@@ -113,8 +112,6 @@
         "policies": []
       }
     },
-
-
     {
       "method": "POST",
       "path": "/roles",
@@ -147,13 +144,14 @@
         "policies": []
       }
     },
-
     {
       "method": "GET",
       "path": "/connect/*",
       "handler": "Auth.connect",
       "config": {
-        "policies": ["plugins.users-permissions.ratelimit"],
+        "policies": [
+          "plugins.users-permissions.ratelimit"
+        ],
         "prefix": ""
       }
     },
@@ -162,7 +160,9 @@
       "path": "/auth/local",
       "handler": "Auth.callback",
       "config": {
-        "policies": ["plugins.users-permissions.ratelimit"],
+        "policies": [
+          "plugins.users-permissions.ratelimit"
+        ],
         "prefix": ""
       }
     },
@@ -171,7 +171,9 @@
       "path": "/auth/local/register",
       "handler": "Auth.register",
       "config": {
-        "policies": ["plugins.users-permissions.ratelimit"],
+        "policies": [
+          "plugins.users-permissions.ratelimit"
+        ],
         "prefix": ""
       }
     },
@@ -189,7 +191,9 @@
       "path": "/auth/forgot-password",
       "handler": "Auth.forgotPassword",
       "config": {
-        "policies": ["plugins.users-permissions.ratelimit"],
+        "policies": [
+          "plugins.users-permissions.ratelimit"
+        ],
         "prefix": ""
       }
     },
@@ -198,7 +202,9 @@
       "path": "/auth/reset-password",
       "handler": "Auth.changePassword",
       "config": {
-        "policies": ["plugins.users-permissions.ratelimit"],
+        "policies": [
+          "plugins.users-permissions.ratelimit"
+        ],
         "prefix": ""
       }
     },
@@ -263,6 +269,54 @@
       "config": {
         "policies": [],
         "prefix": ""
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/attributepermission",
+      "handler": "AttributePermission.find",
+      "config": {
+        "policies": []
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/attributepermission/count",
+      "handler": "AttributePermission.count",
+      "config": {
+        "policies": []
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/attributepermission/:_id",
+      "handler": "AttributePermission.findOne",
+      "config": {
+        "policies": []
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/attributepermission",
+      "handler": "AttributePermission.create",
+      "config": {
+        "policies": []
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/attributepermission/:_id",
+      "handler": "AttributePermission.update",
+      "config": {
+        "policies": []
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/attributepermission/:_id",
+      "handler": "AttributePermission.destroy",
+      "config": {
+        "policies": []
       }
     }
   ]

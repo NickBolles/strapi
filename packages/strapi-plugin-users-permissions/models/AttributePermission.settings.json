@@ -1,0 +1,48 @@
+{
+  "connection": "default",
+  "collectionName": "",
+  "info": {
+    "name": "attributePermission",
+    "description": ""
+  },
+  "options": {
+    "timestamps": true
+  },
+  "attributes": {
+    "type": {
+      "type": "string",
+      "required": true,
+      "configurable": false
+    },
+    "scope": {
+      "default": "attribute",
+      "type": "enumeration",
+      "enum": ["attribute", "model"]
+    },
+    "model": {
+      "type": "string",
+      "required": true,
+      "configurable": false
+    },
+    "attribute": {
+      "type": "string",
+      "required": false,
+      "configurable": false
+    },
+    "enabled": {
+      "type": "boolean",
+      "required": true,
+      "configurable": false
+    },
+    "policy": {
+      "type": "string",
+      "configurable": false
+    },
+    "role": {
+      "model": "role",
+      "via": "permissions",
+      "plugin": "users-permissions",
+      "configurable": false
+    }
+  }
+}
