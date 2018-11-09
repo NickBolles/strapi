@@ -514,9 +514,55 @@ module.exports = {
     return convertParams;
   },
   forEachModel: forEachModel,
-  isAttributePrivate: isAttributePrivate
+  isAttributePrivate: isAttributePrivate,
+  isModel: isModel,
+  getModel: getModel,
+  getModelAssociation: getModelAssociation,
 };
 
+
+function isModel(obj) {
+  return obj && typeof obj !== 'string' && !!obj.orm;
+}
+
+async function getModelAssociation(model, attributeName) {
+  model = await getModel(model);
+  if (!model || !attributeName) {
+    return null;
+  }
+  const matchName = attributeName.toLowerCase();
+  return model.associations.find(v => v.alias === matchName);
+}
+
+// todo: simplify this function some
+function getModel(modelName) {
+  if (!modelName) {
+    throw new Error('Type Error: ModelName must be defined');
+  }
+  if (isModel(modelName)) {
+    return modelName;
+  }
+  let matchName = modelName.toLowerCase();
+  let result;
+  if (strapi.models[matchName]) {
+    return strapi.models[matchName];
+  }
+
+  Promise.all(strapi.utils.models.forEachModel((model, name) => {
+    if (result || !model) {
+      return;
+    }
+    let globalName =
+      typeof model.globalName === 'string'
+        ? model.globalName.toLowerCase()
+        : model.globalName;
+    if (globalName === matchName || name === matchName) {
+      result = model;
+    }
+  }));
+
+  return result;
+}
 
 /**
  * Utility to do somethingn for every model
