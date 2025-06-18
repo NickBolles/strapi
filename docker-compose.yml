@@ -1,0 +1,129 @@
+# MCP Conductor Docker Compose Configuration
+# For easy self-hosted deployment
+
+version: '3.8'
+
+services:
+  mcp-conductor:
+    build: .
+    container_name: mcp-conductor
+    restart: unless-stopped
+    
+    # Environment variables
+    environment:
+      - NODE_ENV=production
+      - LOG_LEVEL=info
+      - DATA_DIR=/app/data
+      - LOG_DIR=/app/logs
+      - WEB_PORT=3000
+      - WEB_HOST=0.0.0.0
+      # Set your encryption key here or use .env file
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-your-32-character-encryption-key-here}
+    
+    # Ports
+    ports:
+      - "3000:3000"
+    
+    # Volumes for persistent data
+    volumes:
+      - ./config:/app/config:ro  # Configuration (read-only)
+      - conductor-data:/app/data  # Application data
+      - conductor-logs:/app/logs  # Logs
+      # Mount your Obsidian vault if using Obsidian integration
+      # - /path/to/your/obsidian/vault:/obsidian:ro
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Optional: Redis for caching and session storage
+  redis:
+    image: redis:7-alpine
+    container_name: mcp-conductor-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - conductor-redis:/data
+    ports:
+      - "6379:6379"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.1'
+
+  # Optional: PostgreSQL for persistent storage
+  postgres:
+    image: postgres:15-alpine
+    container_name: mcp-conductor-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=mcp_conductor
+      - POSTGRES_USER=conductor
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-conductor-password}
+    volumes:
+      - conductor-postgres:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+
+  # Optional: Nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    container_name: mcp-conductor-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro  # SSL certificates
+    depends_on:
+      - mcp-conductor
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+          cpus: '0.1'
+
+# Named volumes for data persistence
+volumes:
+  conductor-data:
+    driver: local
+  conductor-logs:
+    driver: local
+  conductor-redis:
+    driver: local
+  conductor-postgres:
+    driver: local
+
+# Networks
+networks:
+  default:
+    name: mcp-conductor-network
+

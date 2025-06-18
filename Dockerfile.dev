@@ -1,0 +1,28 @@
+# Development Dockerfile for MCP Conductor
+# Optimized for development with hot reload
+
+FROM node:18-alpine
+
+# Install development tools
+RUN apk add --no-cache git
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies (including dev dependencies)
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Create necessary directories
+RUN mkdir -p data logs
+
+# Expose ports
+EXPOSE 3000 9229
+
+# Default command (can be overridden in docker-compose)
+CMD ["npm", "run", "dev"]
+

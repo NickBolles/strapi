@@ -1,161 +1,352 @@
-# Contribute to Strapi
+# Contributing to MCP Conductor
 
-First off, thanks for taking the time to contribute! 🎉👍
+Thank you for your interest in contributing to MCP Conductor! This document provides guidelines and information for contributors.
 
-The following is a set of guidelines for contributing to Strapi and its packages.
+## 🚀 Getting Started
 
-Strapi is an open-source project administered by [the Strapi team](https://strapi.io/company).
+### Prerequisites
 
-Before contributing, ensure that your effort is aligned with the project's roadmap by talking to the maintainers, especially if you are going to spend a lot of time on it. Feel free to [join us on Slack](http://slack.strapi.io) if you are interested in helping us or [drop us an email](mailto:hi@strapi.io) if you are interested in working with us.
+- Node.js 18+
+- npm or yarn
+- Git
+- Basic knowledge of TypeScript and MCP (Model Context Protocol)
 
-## Code of Conduct
+### Development Setup
 
-This project and everyone participating in it is governed by the [Strapi Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to [hi@strapi.io](mailto:hi@strapi.io).
+1. **Fork and clone the repository**:
+   ```bash
+   git clone https://github.com/your-username/mcp-conductor.git
+   cd mcp-conductor
+   ```
 
-## Open Development & Community Driven
-Strapi is open-source under the [MIT license](https://github.com/strapi/strapi/blob/master/LICENSE.md). All the work done is available on GitHub.
-The core team and the contributors send pull requests which go through the same validation process.
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
-Every user can send a feature request using the [issues](https://github.com/strapi/strapi/issues/new?template=FEATURE_REQUEST.md) on GitHub. Feel free to upvote 👍 [existing feature request](https://github.com/strapi/strapi/issues?q=is%3Aopen+is%3Aissue+label%3A%22type%3A+feature+request+%F0%9F%99%8F%22)
+3. **Set up environment**:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your settings
+   ```
 
-## Repository Organization
-We made the choice to use a monorepo design such as [React](https://github.com/facebook/react/tree/master/packages), [Babel](https://github.com/babel/babel/tree/master/packages), [Meteor](https://github.com/meteor/meteor/tree/devel/packages) or [Ember](https://github.com/emberjs/ember.js/tree/master/packages) do. It allows the community to easily maintain the whole ecosystem up-to-date and consistent.
+4. **Create configuration**:
+   ```bash
+   npm run init
+   # Edit config/conductor.yaml
+   ```
 
-The Babel team wrote an excellent short post about [the pros and cons of the monorepo design](https://github.com/babel/babel/blob/master/doc/design/monorepo.md).
+5. **Start development server**:
+   ```bash
+   npm run dev
+   ```
 
-We will do our best to keep the master branch as clean as possible, with tests passing all the times. However, it can happen that the master branch moves faster than the release cycle. To ensure you have the latest stable version, please refer to the [release on npm](https://www.npmjs.com/package/strapi).
+## 🏗️ Project Structure
 
-If you send a pull request, please do it against the `master` branch. We are developing upcoming versions separately to ensure non-breaking changes from master to the latest stable major version.
+```
+src/
+├── core/           # Core orchestration logic
+├── mcp/            # MCP client implementations
+├── config/         # Configuration management
+├── security/       # Authentication and security
+├── orchestration/  # Workflow engine
+├── plugins/        # Plugin system
+├── web/            # Web interface
+├── cli/            # Command-line interface
+└── utils/          # Shared utilities
 
-***
+tests/
+├── unit/           # Unit tests
+├── integration/    # Integration tests
+└── e2e/            # End-to-end tests
 
-## Setup Development Environment
-To facilitate the contribution, we drastically reduce the amount of commands necessary to install the entire development environment. First of all, you need to check if you're using the recommended versions of Node.js (v8) and npm (v5).
-
-Then, please follow the instructions below:
-
-#### 1. ▪️ Fork the repository
-
-[Go to the repository](https://github.com/strapi/strapi) and fork it to your own GitHub account.
-
-#### 2. 💿 Clone the repository
-
-```bash
-git clone git@github.com:strapi/strapi.git
+docs/               # Documentation
+config/             # Configuration examples
 ```
 
-#### 3. ⏳ Installation
- 
-Go to the root of the repository.
-```bash
-cd strapi
-```
+## 🧪 Testing
 
-**Two setup are available... with or without the front-end builds.**
-
-Without the front-end builds, you won't be able to access the administration panel via http://localhost:1337/admin. You'll have to run the administration separately and access it through http://localhost:4000/admin.
-
-<br>
-
-Without the front-end builds (recommended)
-```bash
-npm run setup
-```
-or with the front-end builds
-```bash
-npm run setup:build
-```
-
-> ⚠️  If the installation failed, please remove the global packages related to Strapi. The command `npm ls strapi` will help you to find where your packages are installed globally.
-
-#### 4. 🏗 Create a new project
-
-You can open a new terminal window and go into any folder you want for the next steps.
-```bash
-cd /.../workspace/
-```
-
-The command to generate a project is the same, except you have to add the `--dev` argument at the end of line.
-```bash
-strapi new my-project --dev
-```
-
-#### 5. 🚀 Start the project
-
-First, you have to start the server.
-```bash
-cd ./my-project
-strapi start
-```
-
-The server (API) is available at http://localhost:1337
-
-> ⚠️  If you've followed the recommended setup, you should not be able to reach the administration panel at http://localhost:1337/admin.
-
-Then, you have to start the Webpack server to build and run the administration.
-```bash
-cd ./my-project/admin
-npm run start
-```
-
-The administration panel is available at http://localhost:4000/admin
-
-**Awesome! You are now able to contribute to Strapi.**
-
----
-
-## Plugin Development Setup
-
-To create a new plugin, you'll have to run the following commands:
-
-#### 1. 🏗 Generate a new plugin
+### Running Tests
 
 ```bash
-cd ./my-project
-strapi generate:plugin my-plugin
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run specific test file
+npm test -- config-loader.test.ts
+
+# Run tests with coverage
+npm run test:coverage
 ```
 
-#### 2. ✅ Verify the symlink
+### Writing Tests
 
-Make you that the `strapi-helper-plugin` is linked to your project.
+- Write unit tests for all new functionality
+- Use descriptive test names
+- Follow the existing test patterns
+- Mock external dependencies
+- Aim for high test coverage
 
-Please run this command in the repository folder where Strapi is cloned:
+Example test structure:
+```typescript
+describe('ComponentName', () => {
+  let component: ComponentName;
+
+  beforeEach(() => {
+    component = new ComponentName();
+  });
+
+  describe('methodName', () => {
+    it('should do something specific', () => {
+      // Test implementation
+    });
+  });
+});
+```
+
+## 📝 Code Style
+
+### TypeScript Guidelines
+
+- Use TypeScript strict mode
+- Define interfaces for all data structures
+- Use meaningful variable and function names
+- Add JSDoc comments for public APIs
+- Follow existing naming conventions
+
+### Formatting
+
+We use Prettier and ESLint for code formatting:
+
 ```bash
-cd /repository/strapi/packages/strapi-helper-plugin
-npm link
+# Format code
+npm run format
+
+# Lint code
+npm run lint
+
+# Fix linting issues
+npm run lint:fix
 ```
 
-Link the `strapi-helper-plugin` node_modules in the plugin folder:
-```bash
-cd ./my-project/plugins/my-plugin
-npm link strapi-helper-plugin
+### Commit Messages
+
+Follow conventional commit format:
+
+```
+type(scope): description
+
+[optional body]
+
+[optional footer]
 ```
 
-#### 3. 🚀 Start the project
+Types:
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Code style changes
+- `refactor`: Code refactoring
+- `test`: Test changes
+- `chore`: Build/tooling changes
 
-```bash
-cd ./my-project/admin
-npm run start
+Examples:
+```
+feat(workflow): add conditional step execution
+fix(mcp): handle server connection timeouts
+docs(setup): update installation instructions
 ```
 
-The administration panel is available at http://localhost:4000/admin
+## 🔌 Adding New Integrations
 
----
+### Creating an MCP Server Integration
 
-## Reporting an issue
+1. **Create integration directory**:
+   ```
+   src/integrations/your-service/
+   ├── server.ts
+   ├── types.ts
+   └── README.md
+   ```
 
-Before reporting an issue you need to make sure:
-- You are experiencing a concrete technical issue with Strapi (ideas and feature proposals should happen [on Slack](http://slack.strapi.io)).
-- You are not asking a question about how to use Strapi or about whether or not Strapi has a certain feature. For general help using Strapi, please refer to [the official Strapi documentation](http://strapi.io). For additional help, ask a question on [StackOverflow](http://stackoverflow.com/questions/tagged/strapi).
-- You have already searched for related [issues](https://github.com/strapi/strapi/issues), and found none open (if you found a related _closed_ issue, please link to it in your post).
-- Your issue title is concise, on-topic and polite.
-- You can provide steps to reproduce this issue that others can follow.
-- You have tried all the following (if relevant) and your issue remains:
-  - Make sure you have the right application started.
-  - Make sure you've killed the Strapi server with CTRL+C and started it again.
-  - Make sure you closed any open browser tabs pointed at `localhost` before starting Strapi.
-  - Make sure you do not have any other Strapi applications running in other terminal windows.
-  - Make sure the application you are using to reproduce the issue has a clean `node_modules` directory, meaning:
-    * no dependencies are linked (e.g. you haven't run `npm link`)
-    * that you haven't made any inline changes to files in the `node_modules` folder
-    * that you don't have any weird global dependency loops. The easiest way to double-check any of the above, if you aren't sure, is to run: `$ rm -rf node_modules && npm cache clear && npm install`.
+2. **Implement the MCP server**:
+   ```typescript
+   export class YourServiceMCPServer {
+     // Implementation
+   }
+   ```
+
+3. **Add configuration schema**:
+   ```typescript
+   // Add to src/config/schema.ts
+   ```
+
+4. **Write tests**:
+   ```
+   tests/integration/your-service.test.ts
+   ```
+
+5. **Update documentation**:
+   - Add setup instructions
+   - Update configuration examples
+   - Add to supported integrations list
+
+### Plugin Development
+
+1. **Create plugin structure**:
+   ```
+   plugins/your-plugin/
+   ├── index.ts
+   ├── package.json
+   └── README.md
+   ```
+
+2. **Implement plugin interface**:
+   ```typescript
+   export class YourPlugin implements Plugin {
+     // Implementation
+   }
+   ```
+
+3. **Add plugin documentation**
+
+## 🌐 Web Interface Development
+
+The web interface is built with:
+- Express.js for the backend API
+- HTML/CSS/JavaScript for the frontend
+- WebSocket for real-time updates
+
+### Adding New API Endpoints
+
+1. **Create route handler**:
+   ```typescript
+   // src/web/routes/your-route.ts
+   ```
+
+2. **Add to main router**:
+   ```typescript
+   // src/web/server.ts
+   ```
+
+3. **Write tests**:
+   ```typescript
+   // tests/integration/web/your-route.test.ts
+   ```
+
+## 📚 Documentation
+
+### Writing Documentation
+
+- Use clear, concise language
+- Include code examples
+- Add screenshots for UI features
+- Keep documentation up to date with code changes
+
+### Documentation Structure
+
+- `README.md`: Project overview and quick start
+- `docs/setup.md`: Detailed setup instructions
+- `docs/configuration.md`: Configuration reference
+- `docs/workflows.md`: Workflow creation guide
+- `docs/plugins.md`: Plugin development guide
+- `docs/api-reference.md`: API documentation
+
+## 🐛 Bug Reports
+
+When reporting bugs, please include:
+
+1. **Environment information**:
+   - Node.js version
+   - Operating system
+   - MCP Conductor version
+
+2. **Steps to reproduce**:
+   - Clear, numbered steps
+   - Expected vs actual behavior
+
+3. **Logs and error messages**:
+   - Relevant log entries
+   - Stack traces
+   - Configuration (sanitized)
+
+4. **Additional context**:
+   - Screenshots if applicable
+   - Related issues or PRs
+
+## 💡 Feature Requests
+
+For feature requests:
+
+1. **Check existing issues** to avoid duplicates
+2. **Describe the use case** and problem being solved
+3. **Propose a solution** if you have ideas
+4. **Consider implementation complexity**
+5. **Be open to discussion** and alternative approaches
+
+## 🔄 Pull Request Process
+
+1. **Create a feature branch**:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+2. **Make your changes**:
+   - Follow code style guidelines
+   - Add tests for new functionality
+   - Update documentation
+
+3. **Test your changes**:
+   ```bash
+   npm test
+   npm run lint
+   npm run build
+   ```
+
+4. **Commit your changes**:
+   ```bash
+   git commit -m "feat: add your feature"
+   ```
+
+5. **Push and create PR**:
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+
+6. **PR Requirements**:
+   - Clear description of changes
+   - Link to related issues
+   - All tests passing
+   - Documentation updated
+   - Code review approval
+
+## 🏷️ Release Process
+
+Releases follow semantic versioning (semver):
+
+- **Major** (1.0.0): Breaking changes
+- **Minor** (0.1.0): New features, backward compatible
+- **Patch** (0.0.1): Bug fixes, backward compatible
+
+## 📞 Getting Help
+
+- 💬 [GitHub Discussions](https://github.com/your-org/mcp-conductor/discussions)
+- 🐛 [Issue Tracker](https://github.com/your-org/mcp-conductor/issues)
+- 📧 [Email](mailto:contributors@mcp-conductor.dev)
+
+## 📄 License
+
+By contributing to MCP Conductor, you agree that your contributions will be licensed under the MIT License.
+
+## 🙏 Recognition
+
+Contributors will be recognized in:
+- README.md contributors section
+- Release notes
+- Project documentation
+
+Thank you for contributing to MCP Conductor! 🎼✨
+
