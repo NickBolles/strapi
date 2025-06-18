@@ -1,0 +1,261 @@
+# MCP Conductor Configuration Example
+# Copy this file to conductor.yaml and customize for your setup
+
+general:
+  # Logging level: debug, info, warn, error
+  logLevel: info
+  
+  # Directory for storing application data
+  dataDir: ./data
+  
+  # Web interface configuration
+  web:
+    enabled: true
+    port: 3000
+    host: localhost
+    auth:
+      enabled: false
+      # username: admin
+      # password: your-secure-password
+
+# MCP Server Configurations
+servers:
+  # Obsidian Notes Integration
+  - id: obsidian
+    name: Obsidian Notes
+    type: obsidian
+    connection:
+      type: stdio
+      command: npx
+      args: ["@obsidian/mcp-server"]
+      env:
+        OBSIDIAN_VAULT_PATH: "/path/to/your/obsidian/vault"
+    enabled: true
+    autoRestart: true
+    healthCheck:
+      enabled: true
+      interval: 60  # seconds
+      timeout: 30   # seconds
+      retries: 3
+
+  # Google Calendar Integration
+  - id: calendar
+    name: Google Calendar
+    type: calendar
+    connection:
+      type: stdio
+      command: npx
+      args: ["@google/calendar-mcp-server"]
+    auth:
+      type: oauth
+      credentials:
+        client_id: "your-google-client-id"
+        client_secret: "your-google-client-secret"
+        # These will be encrypted when stored
+    enabled: true
+    autoRestart: true
+    healthCheck:
+      enabled: true
+      interval: 120
+      timeout: 30
+      retries: 3
+
+  # Todoist Integration
+  - id: todoist
+    name: Todoist Tasks
+    type: todoist
+    connection:
+      type: stdio
+      command: npx
+      args: ["@todoist/mcp-server"]
+    auth:
+      type: api_key
+      credentials:
+        api_token: "your-todoist-api-token"
+    enabled: true
+    autoRestart: true
+
+  # Home Assistant Integration
+  - id: homeassistant
+    name: Home Assistant
+    type: homeassistant
+    connection:
+      type: stdio
+      command: npx
+      args: ["@homeassistant/mcp-server"]
+    auth:
+      type: api_key
+      credentials:
+        base_url: "http://your-homeassistant:8123"
+        access_token: "your-homeassistant-token"
+    enabled: false  # Disabled by default
+    autoRestart: true
+
+  # Notion Integration
+  - id: notion
+    name: Notion
+    type: notion
+    connection:
+      type: stdio
+      command: npx
+      args: ["@notion/mcp-server"]
+    auth:
+      type: api_key
+      credentials:
+        api_token: "your-notion-integration-token"
+    enabled: false  # Disabled by default
+    autoRestart: true
+
+# Workflow Definitions
+workflows:
+  # Daily Planning Workflow
+  - id: daily-planning
+    name: Daily Planning Workflow
+    description: Create daily notes and sync with calendar events
+    trigger:
+      type: schedule
+      config:
+        cron: "0 9 * * *"  # Every day at 9 AM
+    steps:
+      - id: create-daily-note
+        name: Create Daily Note
+        serverId: obsidian
+        tool: create_note
+        parameters:
+          title: "Daily Note - {{date:YYYY-MM-DD}}"
+          content: |
+            # Daily Note for {{date:MMMM Do, YYYY}}
+            
+            ## 📅 Today's Schedule
+            {{#each calendar_events}}
+            - {{time}}: {{title}}
+            {{/each}}
+            
+            ## ✅ Tasks
+            {{#each todoist_tasks}}
+            - [ ] {{content}} {{#if due_date}}(due: {{due_date}}){{/if}}
+            {{/each}}
+            
+            ## 📝 Notes
+            
+            ## 🎯 Goals for Today
+            
+            ## 🌟 Wins & Reflections
+            
+      - id: get-calendar-events
+        name: Get Today's Calendar Events
+        serverId: calendar
+        tool: list_events
+        parameters:
+          start_date: "{{date:YYYY-MM-DD}}"
+          end_date: "{{date:YYYY-MM-DD}}"
+        onError: continue
+        
+      - id: get-todoist-tasks
+        name: Get Today's Tasks
+        serverId: todoist
+        tool: get_tasks
+        parameters:
+          filter: "today | overdue"
+        onError: continue
+    enabled: true
+
+  # Weekly Review Workflow
+  - id: weekly-review
+    name: Weekly Review
+    description: Create weekly review notes and task summaries
+    trigger:
+      type: schedule
+      config:
+        cron: "0 18 * * 0"  # Every Sunday at 6 PM
+    steps:
+      - id: create-weekly-review
+        name: Create Weekly Review Note
+        serverId: obsidian
+        tool: create_note
+        parameters:
+          title: "Weekly Review - Week of {{date:YYYY-MM-DD}}"
+          content: |
+            # Weekly Review - Week of {{date:MMMM Do, YYYY}}
+            
+            ## 📊 Week Summary
+            
+            ### ✅ Completed Tasks
+            {{#each completed_tasks}}
+            - {{content}} (completed: {{completed_date}})
+            {{/each}}
+            
+            ### 📅 Meetings & Events
+            {{#each week_events}}
+            - {{date}}: {{title}}
+            {{/each}}
+            
+            ### 🎯 Goals Review
+            
+            ### 📈 Metrics
+            
+            ### 🌟 Wins
+            
+            ### 🔄 Areas for Improvement
+            
+            ### 📋 Next Week's Priorities
+            
+      - id: get-completed-tasks
+        name: Get Week's Completed Tasks
+        serverId: todoist
+        tool: get_completed_tasks
+        parameters:
+          since: "{{date:subtract:7:days:YYYY-MM-DD}}"
+        onError: continue
+        
+      - id: get-week-events
+        name: Get Week's Events
+        serverId: calendar
+        tool: list_events
+        parameters:
+          start_date: "{{date:subtract:7:days:YYYY-MM-DD}}"
+          end_date: "{{date:YYYY-MM-DD}}"
+        onError: continue
+    enabled: true
+
+  # Task to Calendar Sync
+  - id: task-to-calendar
+    name: Sync Important Tasks to Calendar
+    description: Create calendar events for high-priority tasks with due dates
+    trigger:
+      type: schedule
+      config:
+        cron: "0 */2 * * *"  # Every 2 hours
+    steps:
+      - id: get-priority-tasks
+        name: Get High Priority Tasks
+        serverId: todoist
+        tool: get_tasks
+        parameters:
+          filter: "p1 & due date"
+          
+      - id: create-calendar-events
+        name: Create Calendar Events for Tasks
+        serverId: calendar
+        tool: create_event
+        parameters:
+          title: "🎯 {{task.content}}"
+          start_time: "{{task.due_date}}"
+          duration: 60  # 1 hour
+          description: "Task from Todoist: {{task.url}}"
+        condition: "{{task.calendar_event_id}} == null"  # Only if not already synced
+    enabled: false  # Disabled by default
+
+# Plugin Configurations
+plugins: []
+
+# Example plugin configuration:
+# plugins:
+#   - id: custom-integration
+#     name: Custom Integration Plugin
+#     version: 1.0.0
+#     config:
+#       api_endpoint: "https://api.example.com"
+#       timeout: 30
+#     enabled: true
+
